@@ -1,12 +1,14 @@
 package org.serratec.petropet.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-
-import java.time.LocalDate;
+import lombok.Getter;
+import lombok.Setter;
+import java.time.LocalDateTime;
 
 @Entity
-@AllArgsConstructor
+@Getter
+@Setter
+@Table(name = "pedidos_adocao")
 public class PedidoAdocao {
 
     @Id
@@ -14,12 +16,16 @@ public class PedidoAdocao {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pet_id")
+    @JoinColumn(name = "pet_id", nullable = false)
     private Pet pet;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "usuario_id")
-    private Usuario usuario;
-    private LocalDate data;
+    @JoinColumn(name = "solicitante_id", nullable = false)
+    private Usuario solicitante;
 
+    @Column(nullable = false)
+    private LocalDateTime dataPedido;
+
+    @Column(nullable = false)
+    private String status;
 }

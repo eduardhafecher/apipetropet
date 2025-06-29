@@ -1,12 +1,13 @@
 package org.serratec.petropet.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+import java.util.List;
 
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
+@Getter
+@Setter
 public class Usuario {
 
     @Id
@@ -20,4 +21,7 @@ public class Usuario {
     private String senha;
     private String telefone;
     private String foto;
+
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
+    private List<Pet> pets;
 }
