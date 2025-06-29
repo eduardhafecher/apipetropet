@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Setter;
-import org.serratec.petropet.entity.Pet;
 
 import java.util.List;
 
@@ -19,6 +18,5 @@ public class UsuarioResponseDTO {
     private String email;
     private String telefone;
     private String foto;
-    private List<Pet> pets;
-
+    private List<PetResponseDTO> pets;
 }

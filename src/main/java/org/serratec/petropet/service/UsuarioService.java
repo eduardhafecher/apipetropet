@@ -1,7 +1,9 @@
 package org.serratec.petropet.service;
 
+import org.serratec.petropet.dto.PetResponseDTO;
 import org.serratec.petropet.dto.UsuarioRequestDTO;
 import org.serratec.petropet.dto.UsuarioResponseDTO;
+import org.serratec.petropet.entity.Pet;
 import org.serratec.petropet.entity.Usuario;
 import org.serratec.petropet.exceptions.EmailException;
 import org.serratec.petropet.exceptions.NotFoundException;
@@ -10,7 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,7 +28,6 @@ public class UsuarioService {
     private PasswordEncoder passwordEncoder;
 
     public UsuarioResponseDTO criarUsuario(UsuarioRequestDTO dto) {
-        // Verifica se o email já existe antes de tentar salvar
         if (usuarioRepository.existsByEmail(dto.getEmail())) {
             throw new EmailException("O email " + dto.getEmail() + " já está em uso.");
         }
@@ -33,36 +36,36 @@ public class UsuarioService {
         usuario.setNome(dto.getNome());
         usuario.setSobrenome(dto.getSobrenome());
         usuario.setEmail(dto.getEmail());
-        //  Hashear a senha antes de salvar
         usuario.setSenha(passwordEncoder.encode(dto.getSenha()));
         usuario.setTelefone(dto.getTelefone());
         usuario.setFoto(dto.getFoto());
 
         try {
-            return toResponseDTO(usuarioRepository.save(usuario));
+            usuario = usuarioRepository.save(usuario);
+            return toResponseDTO(usuario);
         } catch (DataIntegrityViolationException e) {
             throw new EmailException("Falha ao criar usuário: email já existe ou outro dado é duplicado.");
         }
     }
 
-    // listar todos os usuários
+    @Transactional(readOnly = true) // Garante que a sessão fique aberta para carregar os pets
     public List<UsuarioResponseDTO> listarTodosUsuarios() {
         return usuarioRepository.findAll().stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true) // Garante que a sessão fique aberta para carregar os pets
     public UsuarioResponseDTO buscarPorId(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Usuário não encontrado com ID: " + id));
         return toResponseDTO(usuario);
     }
 
-
+    @Transactional
     public UsuarioResponseDTO atualizarUsuario(Long id, UsuarioRequestDTO dto) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Usuário não encontrado com ID: " + id));
-
 
         if (!usuario.getEmail().equals(dto.getEmail()) && usuarioRepository.existsByEmail(dto.getEmail())) {
             throw new EmailException("O email " + dto.getEmail() + " já está em uso por outro usuário.");
@@ -78,7 +81,8 @@ public class UsuarioService {
         usuario.setFoto(dto.getFoto());
 
         try {
-            return toResponseDTO(usuarioRepository.save(usuario));
+            usuario = usuarioRepository.save(usuario);
+            return toResponseDTO(usuario);
         } catch (DataIntegrityViolationException e) {
             throw new EmailException("Falha ao atualizar usuário: email já existe ou outro dado é duplicado.");
         }
@@ -91,16 +95,34 @@ public class UsuarioService {
         usuarioRepository.deleteById(id);
     }
 
-    //  converte Usuario em UsuarioResponseDTO
+    // metodo conversor principal para Usuario -> UsuarioResponseDTO
     private UsuarioResponseDTO toResponseDTO(Usuario usuario) {
         UsuarioResponseDTO dto = new UsuarioResponseDTO();
         dto.setId(usuario.getId());
         dto.setNome(usuario.getNome());
         dto.setSobrenome(usuario.getSobrenome());
         dto.setEmail(usuario.getEmail());
+        dto.setTelefone(usuario.getTelefone()); // CORRIGIDO
         dto.setFoto(usuario.getFoto());
+
+        // Mapeia a lista de entidades Pet para uma lista de PetResponseDTO
+        if (usuario.getPets() != null) {
+            dto.setPets(usuario.getPets().stream()
+                    .map(this::toPetResponseDTO)
+                    .collect(Collectors.toList()));
+        } else {
+            dto.setPets(Collections.emptyList());
+        }
+
         return dto;
     }
 
-
+    // metodo auxiliar para converter Pet -> PetResponseDTO
+    private PetResponseDTO toPetResponseDTO(Pet pet) {
+        PetResponseDTO petDto = new PetResponseDTO();
+        petDto.setId(pet.getId());
+        petDto.setNome(pet.getNome());
+        petDto.setRaca(pet.getRaca());
+        return petDto;
+    }
 }
