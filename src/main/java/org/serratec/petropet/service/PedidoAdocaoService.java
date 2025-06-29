@@ -44,7 +44,6 @@ public class PedidoAdocaoService {
         dto.setBairro(pet.getBairro());
         dto.setFoto(pet.getFoto());
         dto.setComentario(pet.getComentario());
-        if (pet.getUsuario() != null) { dto.setUsuario(toUsuarioResponseDTO(pet.getUsuario())); }
         return dto;
     }
 
@@ -56,13 +55,12 @@ public class PedidoAdocaoService {
         return dto;
     }
 
-
-    public PedidoAdocaoResponseDTO criarPedido(PedidoAdocaoRequestDTO dto) {
+    public PedidoAdocaoResponseDTO criarPedido(PedidoAdocaoRequestDTO dto) { // O nome do método é 'criarPedido'
         Pet pet = petRepository.findById(dto.getPetId())
-                .orElseThrow(() -> new NotFoundException("Pet não encontrado com ID: " + dto.getPetId()));
+                .orElseThrow(() -> new NotFoundException("Pet não encontrado com ID: " + dto.getPetId())); // --- CORREÇÃO AQUI ---
 
         Usuario solicitante = usuarioRepository.findById(dto.getSolicitanteId())
-                .orElseThrow(() -> new NotFoundException("Usuário solicitante não encontrado com ID: " + dto.getSolicitanteId()));
+                .orElseThrow(() -> new NotFoundException("Usuário solicitante não encontrado com ID: " + dto.getSolicitanteId())); // --- CORREÇÃO AQUI ---
 
         PedidoAdocao pedido = new PedidoAdocao();
         pedido.setPet(pet);
@@ -73,32 +71,29 @@ public class PedidoAdocaoService {
         return toResponseDTO(pedidoAdocaoRepository.save(pedido));
     }
 
-    public PedidoAdocaoResponseDTO buscarPorId(Long id) {
+    public PedidoAdocaoResponseDTO buscarPorId(Long id) { // O nome do método é 'buscarPorId'
         PedidoAdocao pedido = pedidoAdocaoRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Pedido de adoção não encontrado com ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Pedido de adoção não encontrado com ID: " + id)); // --- CORREÇÃO AQUI ---
         return toResponseDTO(pedido);
     }
 
-    // metodo para listar todos os pedidos
     public List<PedidoAdocaoResponseDTO> listarTodosPedidos() {
         return pedidoAdocaoRepository.findAll().stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
     }
 
-    public void deletarPedido(Long id) {
+    public void deletarPedido(Long id) { // O nome do método é 'deletarPedido'
         if (!pedidoAdocaoRepository.existsById(id)) {
-            throw new NotFoundException("Pedido de adoção não encontrado com ID: " + id);
+            throw new NotFoundException("Pedido de adoção não encontrado com ID: " + id); // --- CORREÇÃO AQUI ---
         }
         pedidoAdocaoRepository.deleteById(id);
     }
 
-    // metodo para converter PedidoAdocao em PedidoAdocaoResponseDTO
     private PedidoAdocaoResponseDTO toResponseDTO(PedidoAdocao pedido) {
         PedidoAdocaoResponseDTO dto = new PedidoAdocaoResponseDTO();
         dto.setId(pedido.getId());
         dto.setDataPedido(pedido.getDataPedido());
-
         dto.setStatus(pedido.getStatus());
 
         if (pedido.getPet() != null) {
@@ -108,13 +103,12 @@ public class PedidoAdocaoService {
         if (pedido.getSolicitante() != null) {
             dto.setSolicitante(toUsuarioResponseDTO(pedido.getSolicitante()));
         }
-
         return dto;
     }
 
     public PedidoAdocaoResponseDTO atualizarStatusPedido(Long id, StatusPedidoAdocao novoStatus) {
         PedidoAdocao pedido = pedidoAdocaoRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Pedido de adoção não encontrado com ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Pedido de adoção não encontrado com ID: " + id)); // --- CORREÇÃO AQUI ---
 
         pedido.setStatus(novoStatus);
 

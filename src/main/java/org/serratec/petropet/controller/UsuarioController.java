@@ -41,7 +41,7 @@ public class UsuarioController {
             UsuarioResponseDTO usuarioAtualizado = usuarioService.atualizarUsuario(id, usuarioRequestDTO);
             return new ResponseEntity<>(usuarioAtualizado, HttpStatus.OK);
         } catch (EmailException e) {
-            return new ResponseEntity<>(HttpStatus.CONFLICT); 
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
     }
 
