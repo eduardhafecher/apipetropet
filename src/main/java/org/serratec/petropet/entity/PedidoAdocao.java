@@ -3,6 +3,8 @@ package org.serratec.petropet.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.serratec.petropet.enums.StatusPedidoAdocao;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,6 +28,7 @@ public class PedidoAdocao {
     @Column(nullable = false)
     private LocalDateTime dataPedido;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String status;
+    private StatusPedidoAdocao status;
 }

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.serratec.petropet.enums.StatusPedidoAdocao;
 
 import java.time.LocalDateTime;
 
@@ -17,6 +18,6 @@ public class PedidoAdocaoResponseDTO {
     private PetResponseDTO pet;
     private UsuarioResponseDTO solicitante;
     private LocalDateTime dataPedido;
-    private String status;
-}
+    private StatusPedidoAdocao status;
 
+}

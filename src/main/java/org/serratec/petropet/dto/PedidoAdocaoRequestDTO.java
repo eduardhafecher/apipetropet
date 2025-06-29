@@ -18,6 +18,9 @@ public class PedidoAdocaoRequestDTO {
     @NotNull(message = "ID do solicitante é obrigatório")
     private Long solicitanteId;
 
-    // O status e a data do pedido serão definidos no serviço
+    public Long getUsuarioId() {
+        return this.solicitanteId;
+    }
+
 }
 
