@@ -1,0 +1,3 @@
+2025-06-29 15:10:37.666129-03:00 jdbc[13]: exception
+org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "USUARIOS" not found; SQL statement:
+INSERT INTO usuarios (nome, email, telefone) VALUES ('João Carvalho', 'joao.carvalho@email.com', '21987654330') [42102-232]
