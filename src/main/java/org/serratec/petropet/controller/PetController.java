@@ -18,7 +18,6 @@ public class PetController {
 
     private final PetService petService;
 
-    // Injeção de dependência via construtor
     public PetController(PetService petService) {
         this.petService = petService;
     }
@@ -29,7 +28,6 @@ public class PetController {
         return new ResponseEntity<>(novoPet, HttpStatus.CREATED);
     }
 
-    // O endpoint GET para listar todos os pets agora aceita Pageable
     @GetMapping
     public ResponseEntity<Page<PetResponseDTO>> listarTodosPets(Pageable pageable) {
         Page<PetResponseDTO> petsPage = petService.listarTodosOsPets(pageable);
@@ -47,8 +45,7 @@ public class PetController {
 
     @GetMapping("/especie/{especie}")
     public ResponseEntity<List<PetResponseDTO>> buscarPorEspecie(@PathVariable String especie) {
-        // Para este método, se você quiser paginar também, precisaria de um Pageable aqui.
-        // No momento, ele retorna uma lista completa da espécie, o que pode ser ok dependendo do caso de uso.
+        //adicionar pageable aqui tb
         List<PetResponseDTO> pets = petService.buscarPorEspecie(especie);
         if (pets.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
