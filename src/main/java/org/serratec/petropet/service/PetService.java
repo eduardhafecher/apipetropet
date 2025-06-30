@@ -1,4 +1,4 @@
-package org.serratec.petropet.services;
+package org.serratec.petropet.service;
 
 import org.serratec.petropet.dto.PetRequestDTO;
 import org.serratec.petropet.dto.PetResponseDTO;
@@ -7,7 +7,8 @@ import org.serratec.petropet.entity.Pet;
 import org.serratec.petropet.exceptions.NotFoundException;
 import org.serratec.petropet.repository.PetRepository;
 import org.serratec.petropet.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page; // Importe Page
+import org.springframework.data.domain.Pageable; // Importe Pageable
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,37 +17,32 @@ import java.util.stream.Collectors;
 @Service
 public class PetService {
 
-    @Autowired
-    private PetRepository petRepository;
+    private final PetRepository petRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    @Autowired
-    private UsuarioRepository usuarioRepository;
+    // Injeção de dependência via construtor (preferível ao @Autowired no campo)
+    public PetService(PetRepository petRepository, UsuarioRepository usuarioRepository) {
+        this.petRepository = petRepository;
+        this.usuarioRepository = usuarioRepository;
+    }
 
     public PetResponseDTO criarPet(PetRequestDTO dto) {
         Pet pet = new Pet();
+        copyDtoToEntity(dto, pet); // Método auxiliar para copiar dados do DTO para a entidade
 
-        pet.setNome(dto.getNome());
-        pet.setEspecie(dto.getEspecie());
-        pet.setRaca(dto.getRaca());
-        pet.setGenero(dto.getGenero());
-        pet.setTag(dto.getTag());
-        pet.setBairro(dto.getBairro());
-        pet.setFoto(dto.getFoto());
-        pet.setComentario(dto.getComentario());
         // Busca o usuário pelo ID fornecido no DTO
         pet.setUsuario(usuarioRepository.findById(dto.getUsuarioId())
                 .orElseThrow(() -> new NotFoundException("Usuário não encontrado com ID: " + dto.getUsuarioId())));
+
         return toResponseDTO(petRepository.save(pet));
     }
 
-    // listar todos os pets
-    public List<PetResponseDTO> listarTodosOsPets() {
-        return petRepository.findAll().stream()
-                .map(this::toResponseDTO)
-                .collect(Collectors.toList());
+    public Page<PetResponseDTO> listarTodosOsPets(Pageable pageable) {
+        // O método findAll(Pageable) do JpaRepository já retorna um Page
+        return petRepository.findAll(pageable)
+                .map(this::toResponseDTO); // Mapeia cada Pet para PetResponseDTO dentro da página
     }
 
-    // buscar um pet por ID e retornar o DTO
     public PetResponseDTO buscarPetPorId(Long id) {
         Pet pet = petRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Pet não encontrado com ID: " + id));
@@ -54,25 +50,18 @@ public class PetService {
     }
 
     public List<PetResponseDTO> buscarPorEspecie(String especie) {
-        return petRepository.findByEspecie(especie)
-                .stream()
+        return petRepository.findByEspecie(especie).stream()
                 .map(this::toResponseDTO)
-                .collect(Collectors.toList()); // Usar Collectors.toList() é mais explícito
+                .collect(Collectors.toList());
     }
 
     public PetResponseDTO atualizarPet(Long id, PetRequestDTO dto) {
         Pet pet = petRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Pet não encontrado com ID: " + id));
 
-        // Atualiza os campos do pet com base nos dados do DTO
-        pet.setNome(dto.getNome());
-        pet.setEspecie(dto.getEspecie());
-        pet.setRaca(dto.getRaca());
-        pet.setGenero(dto.getGenero());
-        pet.setTag(dto.getTag());
-        pet.setBairro(dto.getBairro());
-        pet.setFoto(dto.getFoto());
-        pet.setComentario(dto.getComentario());
+        copyDtoToEntity(dto, pet); // Reutiliza o método auxiliar para copiar dados
+
+        // Atualiza o usuário, se necessário
         pet.setUsuario(usuarioRepository.findById(dto.getUsuarioId())
                 .orElseThrow(() -> new NotFoundException("Usuário não encontrado com ID: " + dto.getUsuarioId())));
 
@@ -86,7 +75,6 @@ public class PetService {
         petRepository.deleteById(id);
     }
 
-    // converte o Pet em PetResponseDTO
     private PetResponseDTO toResponseDTO(Pet pet) {
         PetResponseDTO dto = new PetResponseDTO();
         dto.setId(pet.getId());
@@ -108,7 +96,19 @@ public class PetService {
         return dto;
     }
 
+    /*
+     metodo para copiar os campos do PetRequestDTO para a entidade Pet.
+     * evita duplicação de código em criarPet e atualizarPet.
+     */
 
-
-
+    private void copyDtoToEntity(PetRequestDTO dto, Pet pet) {
+        pet.setNome(dto.getNome());
+        pet.setEspecie(dto.getEspecie());
+        pet.setRaca(dto.getRaca());
+        pet.setGenero(dto.getGenero());
+        pet.setTag(dto.getTag());
+        pet.setBairro(dto.getBairro());
+        pet.setFoto(dto.getFoto());
+        pet.setComentario(dto.getComentario());
+    }
 }

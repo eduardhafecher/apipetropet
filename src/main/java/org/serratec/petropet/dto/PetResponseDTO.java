@@ -1,10 +1,10 @@
 package org.serratec.petropet.dto;
 
-import lombok.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.serratec.petropet.dto.UsuarioResponseDTO;
 
-@Getter
-@Setter
-@AllArgsConstructor
+@Data // Anotação gera Getters, Setters, toString, equals e hashCode
 @NoArgsConstructor
 public class PetResponseDTO {
     private Long id;

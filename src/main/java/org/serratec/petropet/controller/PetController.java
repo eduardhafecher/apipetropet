@@ -3,8 +3,9 @@ package org.serratec.petropet.controller;
 import jakarta.validation.Valid;
 import org.serratec.petropet.dto.PetRequestDTO;
 import org.serratec.petropet.dto.PetResponseDTO;
-import org.serratec.petropet.services.PetService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.serratec.petropet.service.PetService; // Corrigido para .services
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,8 +16,12 @@ import java.util.List;
 @RequestMapping("/pets")
 public class PetController {
 
-    @Autowired
-    private PetService petService;
+    private final PetService petService;
+
+    // Injeção de dependência via construtor
+    public PetController(PetService petService) {
+        this.petService = petService;
+    }
 
     @PostMapping
     public ResponseEntity<PetResponseDTO> criarPet(@Valid @RequestBody PetRequestDTO petRequestDTO) {
@@ -24,11 +29,29 @@ public class PetController {
         return new ResponseEntity<>(novoPet, HttpStatus.CREATED);
     }
 
+    // O endpoint GET para listar todos os pets agora aceita Pageable
+    @GetMapping
+    public ResponseEntity<Page<PetResponseDTO>> listarTodosPets(Pageable pageable) {
+        Page<PetResponseDTO> petsPage = petService.listarTodosOsPets(pageable);
+        if (petsPage.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(petsPage, HttpStatus.OK);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<PetResponseDTO> buscarPetPorId(@PathVariable Long id) {
+        PetResponseDTO pet = petService.buscarPetPorId(id);
+        return new ResponseEntity<>(pet, HttpStatus.OK);
+    }
+
     @GetMapping("/especie/{especie}")
     public ResponseEntity<List<PetResponseDTO>> buscarPorEspecie(@PathVariable String especie) {
+        // Para este método, se você quiser paginar também, precisaria de um Pageable aqui.
+        // No momento, ele retorna uma lista completa da espécie, o que pode ser ok dependendo do caso de uso.
         List<PetResponseDTO> pets = petService.buscarPorEspecie(especie);
         if (pets.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT); // Retorna 204 se a lista estiver vazia
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
         return new ResponseEntity<>(pets, HttpStatus.OK);
     }
@@ -42,21 +65,6 @@ public class PetController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletarPet(@PathVariable Long id) {
         petService.deletarPet(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT); // 204 No Content para deleção bem-sucedida
-    }
-
-    @GetMapping
-    public ResponseEntity<List<PetResponseDTO>> listarTodosPets() {
-        List<PetResponseDTO> pets = petService.listarTodosOsPets();
-        if (pets.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-        return new ResponseEntity<>(pets, HttpStatus.OK);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<PetResponseDTO> buscarPetPorId(@PathVariable Long id) {
-        PetResponseDTO pet = petService.buscarPetPorId(id);
-        return new ResponseEntity<>(pet, HttpStatus.OK);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }
