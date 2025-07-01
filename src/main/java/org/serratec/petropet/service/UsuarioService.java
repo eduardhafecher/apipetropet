@@ -95,7 +95,7 @@ public class UsuarioService {
         usuarioRepository.deleteById(id);
     }
 
-    // metodo conversor principal para Usuario -> UsuarioResponseDTO
+    // metodo conversor para Usuario -> UsuarioResponseDTO
     private UsuarioResponseDTO toResponseDTO(Usuario usuario) {
         UsuarioResponseDTO dto = new UsuarioResponseDTO();
         dto.setId(usuario.getId());
@@ -105,7 +105,7 @@ public class UsuarioService {
         dto.setTelefone(usuario.getTelefone()); // CORRIGIDO
         dto.setFoto(usuario.getFoto());
 
-        // Mapeia a lista de entidades Pet para uma lista de PetResponseDTO
+        // mapeia a lista de pets para uma lista de PetResponseDTO
         if (usuario.getPets() != null) {
             dto.setPets(usuario.getPets().stream()
                     .map(this::toPetResponseDTO)
@@ -117,7 +117,7 @@ public class UsuarioService {
         return dto;
     }
 
-    // metodo auxiliar para converter Pet -> PetResponseDTO
+    // esse converte Pet p PetResponseDTO
     private PetResponseDTO toPetResponseDTO(Pet pet) {
         PetResponseDTO petDto = new PetResponseDTO();
         petDto.setId(pet.getId());

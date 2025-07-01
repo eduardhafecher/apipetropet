@@ -1,8 +1,10 @@
 package org.serratec.petropet.config;
 
-import org.serratec.petropet.security.JWTAuthenticationFilter;
-import org.serratec.petropet.security.JWTAuthorizationFilter;
-import org.serratec.petropet.security.JWTUtil;
+import java.util.Arrays;
+
+import org.serratec.petropet.security.JwtAuthenticationFilter;
+import org.serratec.petropet.security.JwtAuthorizationFilter;
+import org.serratec.petropet.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,58 +15,64 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-@Configuration
 @EnableWebSecurity
+@Configuration
 public class SecurityConfig {
-
     @Autowired
-    private JWTUtil jwtUtil;
+    private JwtUtil jwtUtil;
 
     @Autowired
     private UserDetailsService userDetailsService;
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
+        http.csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                //areas para liberacao de endpoints
+                .authorizeHttpRequests(requests -> requests
+                        .requestMatchers("/public/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/usuarios").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/pets").permitAll()
+                        .anyRequest().authenticated()
+
+                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .headers(headers -> headers.frameOptions().disable());
+
+        http.addFilterBefore(new JwtAuthenticationFilter(
+                        authenticationManager(http.getSharedObject(AuthenticationConfiguration.class)), jwtUtil),
+                UsernamePasswordAuthenticationFilter.class);
+
+        http.addFilterBefore(new JwtAuthorizationFilter(
+                        authenticationManager(http.getSharedObject(AuthenticationConfiguration.class)), jwtUtil, userDetailsService),
+                UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // Obtém o AuthenticationManager que acabamos de criar
-        AuthenticationManager authenticationManager = http.getSharedObject(AuthenticationManager.class);
-
-        http
-                .csrf(csrf -> csrf.disable())
-                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin())) // Permite o console H2
-
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                .authorizeHttpRequests(auth -> auth
-                        // Endpoints sem autenticação
-                        .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
-                        .requestMatchers(HttpMethod.POST, "/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/usuarios").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/pets").permitAll()
-
-                        .anyRequest().authenticated()
-                )
-
-
-
-                .addFilter(new JWTAuthenticationFilter(authenticationManager, jwtUtil))
-                .addFilterBefore(new JWTAuthorizationFilter(authenticationManager, jwtUtil, userDetailsService), UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
+        corsConfiguration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:2000"));
+        corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfiguration.applyPermitDefaultValues());
+        return source;
     }
+
 }

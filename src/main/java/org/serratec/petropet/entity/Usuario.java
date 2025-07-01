@@ -5,9 +5,11 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections; // Importe Collections para retornar uma lista vazia
 import java.util.List;
@@ -46,7 +48,9 @@ public class Usuario implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         //Roni diz que no caso de não usar perfis, pode retornar uma coleção vazia
-        return Collections.emptyList();
+      // return Collections.emptyList();
+        return Arrays.asList(new SimpleGrantedAuthority("ROLE_USER"));
+
     }
 
 }
